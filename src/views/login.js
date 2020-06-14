@@ -1,22 +1,41 @@
 import React from 'react'
-import Card from '../componets/card'
-import FormGroup from '../componets/form-group'
+import Card from '../components/card'
+import FormGroup from '../components/form-group'
+import {withRouter} from 'react-router-dom'
+import UsuarioService from '../app/service/usuarioService'
+import { mensagemErro } from '../components/toastr'
+import { AuthContext  } from '../main/provedorAutenticacao'
 
 
 class Login extends React.Component {
 
     state = {
         email: '',
-        senha: ''
+        senha: '',
+    }
+
+    constructor(){
+        super();
+        this.service = new UsuarioService();
     }
 
     entrar = () => {
-         console.log('email: ', this.state.email)
-         console.log('senha; ', this.state.senha)
+        this.service.autenticar({
+            email: this.state.email,
+            senha: this.state.senha
+        }).then( response => {
+            this.context.iniciarSessao(response.data)
+            this.props.history.push('/home')
+        }).catch( erro => {
+           mensagemErro(erro.response.data)
+        })
+    }
+
+    prepareCadastrar = () => {
+       this.props.history.push('/cadastro-usuarios')
     }
     render() {
         return (
-           <div className="container">
               <div className="row">
                  <div className="col-md-6" style={ {position : 'relative' ,left: '300px' } }>
                     <div className='bs-docs-section'>
@@ -36,12 +55,12 @@ class Login extends React.Component {
 
                                            <FormGroup Label='Senha' htmlFor=''>
                                                  <input type="password"  value={this.state.senha}
-                                                 onChange={ e=> this.setState({senha: e.target.value})}
+                                                 onChange={ e => this.setState({senha: e.target.value})}
                                                  className="form-control" 
                                                  id="exampleInputPassword1" placeholder="Password" />
                                            </FormGroup>
                                            <button onClick={ this.entrar } className="btn btn-success">Entrar</button>
-                                           <button class="btn btn-danger">Cadastrar</button>
+                                           <button onClick={ this.prepareCadastrar } className="btn btn-danger">Cadastrar</button>
                                        </fieldset>
                                   </div>
                               </div>
@@ -50,9 +69,10 @@ class Login extends React.Component {
                      </div>
                    </div>
               </div>
-          </div>
         )
     }
 }
 
-export default Login
+Login.contextType = AuthContext
+
+export default withRouter (Login);
